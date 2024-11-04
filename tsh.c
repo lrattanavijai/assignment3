@@ -182,7 +182,9 @@ void eval(char *cmdline) {
     if ((pid = fork()) == 0) { // fork and execvp to run program
       setpgid(0, 0);           // new process group and ID for child program
       if (execvp(argv[0], argv) < 0) { // checks if child is successful and runs
-        app_error("Command not found"); // otherwise error
+        int n = strlen(cmdline) - 1; //strip the '\n' from the string
+        printf("%.*s", n, cmdline);
+        app_error(": Command not found"); // otherwise error
       }
     }
     if (!bg) {
