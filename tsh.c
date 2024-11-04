@@ -1,10 +1,9 @@
 /*
  * tsh - A tiny shell program with job control
  *
- * <Aidan Chin 33803321 & Luke Rattanavijai>
+ * <Aidan Chin 33803321 & Luke Rattanavijai 33714609>
  */
 
-// test test 
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
@@ -186,10 +185,8 @@ void eval(char *cmdline) {
       }
     }
     if (!bg) {
-      int status;
-      if (waitpid(pid, &status, 0) < 0) {
-        app_error("waitpid error");
-      }
+      addjob(jobs, pid, FG, cmdline);  // Add foreground job
+      waitfg(pid);  // Wait for foreground job
     } else { // add job and print out
       addjob(jobs, pid, BG, cmdline);
       printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
@@ -310,7 +307,7 @@ void do_bgfg(char **argv) {
 
   pid = job->pid; // make pid for sure
 
-  if (strcmp(argv[0], "bg")) { // change to background
+  if (strcmp(argv[0], "bg") == 0) { // Check for exact match // change to background
     job->state = BG;
     kill(-pid, SIGCONT);
     printf("[%d] (%d) %s\n", job->jid, job->pid, job->cmdline);
@@ -397,8 +394,8 @@ void sigint_handler(int sig) {
 
 	if (pid != 0) {
 		// sending the SIGINT to the entire foreground process group
-		kill(-pid,SIGINT);
-	}
+        kill(-pid, SIGINT);
+  }
 	errno = olderrno;
 return;
  }
@@ -414,8 +411,8 @@ void sigtstp_handler(int sig) {
 
 	if (pid != 0) {
 		// send STGTSP to the entire foreground process group
-		kill(-pid, SIGTSTP);
-	}
+    kill(-pid, SIGTSTP);
+  }
 	errno = olderrno;
 
 
