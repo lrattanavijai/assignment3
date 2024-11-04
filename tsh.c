@@ -1,9 +1,10 @@
 /*
  * tsh - A tiny shell program with job control
  *
- * <Aidan Chin 33803321 & Luke Rattanavijai 33714609>
+ * <Aidan Chin 33803321 & Luke Rattanavijai>
  */
 
+// test test 
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
@@ -169,7 +170,7 @@ void eval(char *cmdline) {
   char buffer[MAXLINE];
   int bg;
   pid_t pid;
-
+  int len = strlen(cmdline) - 1; //strip the '\n' from the string
   strcpy(buffer, cmdline);
   bg = parseline(
       buffer,
@@ -181,17 +182,18 @@ void eval(char *cmdline) {
     if ((pid = fork()) == 0) { // fork and execvp to run program
       setpgid(0, 0);           // new process group and ID for child program
       if (execvp(argv[0], argv) < 0) { // checks if child is successful and runs
-        int n = strlen(cmdline) - 1; //strip the '\n' from the string
-        printf("%.*s", n, cmdline);
+        printf("%.*s", len, cmdline);
         app_error(": Command not found"); // otherwise error
       }
     }
     if (!bg) {
-      addjob(jobs, pid, FG, cmdline);  // Add foreground job
-      waitfg(pid);  // Wait for foreground job
+      int status;
+      if (waitpid(pid, &status, 0) < 0) {
+        app_error("waitpid error");
+      }
     } else { // add job and print out
       addjob(jobs, pid, BG, cmdline);
-      printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
+      printf("[%d] (%d) %.*s", pid2jid(pid), pid, len, cmdline);
     }
   }
 
@@ -309,7 +311,7 @@ void do_bgfg(char **argv) {
 
   pid = job->pid; // make pid for sure
 
-  if (strcmp(argv[0], "bg") == 0) { // Check for exact match // change to background
+  if (strcmp(argv[0], "bg")) { // change to background
     job->state = BG;
     kill(-pid, SIGCONT);
     printf("[%d] (%d) %s\n", job->jid, job->pid, job->cmdline);
@@ -396,8 +398,8 @@ void sigint_handler(int sig) {
 
 	if (pid != 0) {
 		// sending the SIGINT to the entire foreground process group
-        kill(-pid, SIGINT);
-  }
+		kill(-pid,SIGINT);
+	}
 	errno = olderrno;
 return;
  }
@@ -413,8 +415,8 @@ void sigtstp_handler(int sig) {
 
 	if (pid != 0) {
 		// send STGTSP to the entire foreground process group
-    kill(-pid, SIGTSTP);
-  }
+		kill(-pid, SIGTSTP);
+	}
 	errno = olderrno;
 
 
