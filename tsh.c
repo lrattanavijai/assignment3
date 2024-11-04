@@ -193,7 +193,7 @@ void eval(char *cmdline) {
       }
     } else { // add job and print out
       addjob(jobs, pid, BG, cmdline);
-      printf("[%d] (%d) %.*s", pid2jid(pid), pid, len, cmdline);
+      printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
     }
   }
 
